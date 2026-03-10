@@ -8,13 +8,14 @@ from typing import Optional, Union
 
 class ApplicationRecord:
 
-    CSV_HEADER = ["timestamp", "company_name", "application_id"]
+    CSV_HEADER = ["timestamp", "company_name", "application_id", "recruiter_email"]
 
     def __init__(
         self,
         timestamp: Optional[Union[str, datetime.datetime]] = None,
         company_name: str = "",
         application_id: str = "",
+        recruiter_email: str = "",
     ) -> None:
         # default to current UTC time if not provided
         if timestamp is None:
@@ -22,6 +23,7 @@ class ApplicationRecord:
         self._timestamp = self._to_iso_utc(timestamp)
         self._company_name = str(company_name)
         self._application_id = str(application_id)
+        self._recruiter_email = str(recruiter_email)
 
     # --- timestamp property ---
     @property
@@ -53,13 +55,23 @@ class ApplicationRecord:
         self._application_id = str(value)
 
 
+    # --- recruiter_email property ---
+    @property
+    def recruiter_email(self) -> str:
+        return self._recruiter_email
+
+    @recruiter_email.setter
+    def recruiter_email(self, value: str) -> None:
+        self._recruiter_email = str(value)
+
+
     # --- helpers ---
     def to_csv_row(self) -> list:
         """Return a list suitable for csv.writer.writerow."""
-        return [self.timestamp, self.company_name, self.application_id]
+        return [self.timestamp, self.company_name, self.application_id, self.recruiter_email]
 
     def append_to_csv(self, file_path: Union[str, Path]) -> None:
-
+        # Ensure the directory exists before writing to the file
         path = Path(file_path)
         if path.parent and not path.parent.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -68,7 +80,7 @@ class ApplicationRecord:
 
         # Use newline="" to let csv module handle newlines correctly across platforms
         with path.open("a", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+            writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)  # type: ignore[arg-type]
             if write_header:
                 writer.writerow(self.CSV_HEADER)
             writer.writerow(self.to_csv_row())
@@ -92,5 +104,6 @@ class ApplicationRecord:
     def __repr__(self) -> str:
         return (
             f"ApplicationRecord(timestamp={self.timestamp!r}, "
-            f"company_name={self.company_name!r}, application_id={self.application_id!r})"
+            f"company_name={self.company_name!r}, application_id={self.application_id!r}, "
+            f"recruiter_email={self.recruiter_email!r})"
         )
